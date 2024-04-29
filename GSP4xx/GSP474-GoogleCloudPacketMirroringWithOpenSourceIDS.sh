@@ -39,18 +39,18 @@ checkpoint(){
 # TODO: PUT THE TASKS HERE
 
 VPC_NAME=dm-stamford
-REGION=us-west4
+REGION=us-west1
 
 task1(){
 cat << EOF
 Task 1 - Prepare the environment (Creating VPC and subnets)
 $(splitter)
-In this task, we'll be creating a VPC ($VPC_NAME) with 2 subnets ($VPC_NAME-uswest4, $VPC_NAME-uswest4-ids) in us-east4 region.
+In this task, we'll be creating a VPC ($VPC_NAME) with 2 subnets ($VPC_NAME-uswest1, $VPC_NAME-uswest1-ids) in us-east4 region.
 EOF
 pause
 echo_cmd gcloud compute networks create $VPC_NAME --subnet-mode=custom
-echo_cmd gcloud compute networks subnets create $VPC_NAME-uswest4 --region=$REGION --network=$VPC_NAME --range=172.21.0.0/24
-echo_cmd gcloud compute networks subnets create $VPC_NAME-uswest4-ids --region=$REGION --network=$VPC_NAME --range=172.21.1.0/24
+echo_cmd gcloud compute networks subnets create $VPC_NAME-uswest1 --region=$REGION --network=$VPC_NAME --range=172.21.0.0/24
+echo_cmd gcloud compute networks subnets create $VPC_NAME-uswest1-ids --region=$REGION --network=$VPC_NAME --range=172.21.1.0/24
 checkpoint
 } # End of task 1
 
@@ -82,8 +82,8 @@ Cloud NAT provides Internet access for whole VPC with only 1 public IP.
 The IDS we'll create later on will not have public IP for security reason, but still need Internet access for updates and installations.
 EOF
 pause
-echo_cmd gcloud compute routers create router-stamford-nat-west4 --network=$VPC_NAME --region=$REGION
-echo_cmd gcloud compute routers nats create nat-gw-$VPC_NAME-west4 --router=router-stamford-nat-west4 --router-region=$REGION --auto-allocate-nat-external-ips --nat-all-subnet-ip-ranges
+echo_cmd gcloud compute routers create router-stamford-nat-west1 --network=$VPC_NAME --region=$REGION
+echo_cmd gcloud compute routers nats create nat-gw-$VPC_NAME-west1 --router=router-stamford-nat-west1 --router-region=$REGION --auto-allocate-nat-external-ips --nat-all-subnet-ip-ranges
 checkpoint
 } # End of task 3
 
@@ -100,7 +100,7 @@ In this task, we'll be creating the followings:
         Machine Type: g1-small
         Region: $REGION
         Network: $VPC_NAME
-        Subnet: $VPC_NAME-uswest4
+        Subnet: $VPC_NAME-uswest1
         External IP: Auto
     - template-$VPC_NAME-ids-$REGION
         Image: Ubuntu 16.04
@@ -109,15 +109,15 @@ In this task, we'll be creating the followings:
         Machine Type: (Not specified)
         Region: $REGION
         Internal Network: $VPC_NAME
-        Subnet: $VPC_NAME-uswest4-ids
+        Subnet: $VPC_NAME-uswest1-ids
         External IP: (Disabled)
 * Managed Instance Group
-    - mig-$VPC_NAME-web-uswest4
-        Template: template-$VPC_NAME-web-us-west4
+    - mig-$VPC_NAME-web-uswest1
+        Template: template-$VPC_NAME-web-us-west1
         Size: 2
         Zone: $REGION-a
-    - mig-$VPC_NAME-ids-uswest4
-        Template: template-$VPC_NAME-ids-us-west4
+    - mig-$VPC_NAME-ids-uswest1
+        Template: template-$VPC_NAME-ids-us-west1
         Size: 1
         Zone: $REGION-a
 EOF
@@ -127,7 +127,7 @@ cat << EOF
 gcloud compute instance-templates create template-$VPC_NAME-web-$REGION \
 --region=$REGION \
 --network=$VPC_NAME \
---subnet=$VPC_NAME-uswest4 \
+--subnet=$VPC_NAME-uswest1 \
 --machine-type=g1-small \
 --image=ubuntu-1604-xenial-v20200807 \
 --image-project=ubuntu-os-cloud \
@@ -144,7 +144,7 @@ EOF
 gcloud compute instance-templates create template-$VPC_NAME-web-$REGION \
 --region=$REGION \
 --network=$VPC_NAME \
---subnet=$VPC_NAME-uswest4 \
+--subnet=$VPC_NAME-uswest1 \
 --machine-type=g1-small \
 --image=ubuntu-1604-xenial-v20200807 \
 --image-project=ubuntu-os-cloud \
@@ -158,7 +158,7 @@ gcloud compute instance-templates create template-$VPC_NAME-web-$REGION \
   tee /var/www/html/index.html
   systemctl restart apache2'
 
-echo_cmd gcloud compute instance-groups managed create mig-$VPC_NAME-web-uswest4 --template=template-$VPC_NAME-web-$REGION --size=2 --zone=$REGION-a
+echo_cmd gcloud compute instance-groups managed create mig-$VPC_NAME-web-uswest1 --template=template-$VPC_NAME-web-$REGION --size=2 --zone=$REGION-a
 
 
 splitter
@@ -167,7 +167,7 @@ gcloud compute instance-templates create template-$VPC_NAME-ids-$REGION \
 --region=$REGION \
 --network=$VPC_NAME \
 --no-address \
---subnet=$VPC_NAME-uswest4-ids \
+--subnet=$VPC_NAME-uswest1-ids \
 --image=ubuntu-1604-xenial-v20200807 \
 --image-project=ubuntu-os-cloud \
 --tags=ids,webserver \
@@ -184,7 +184,7 @@ gcloud compute instance-templates create template-$VPC_NAME-ids-$REGION \
 --region=$REGION \
 --network=$VPC_NAME \
 --no-address \
---subnet=$VPC_NAME-uswest4-ids \
+--subnet=$VPC_NAME-uswest1-ids \
 --image=ubuntu-1604-xenial-v20200807 \
 --image-project=ubuntu-os-cloud \
 --tags=ids,webserver \
@@ -197,7 +197,7 @@ gcloud compute instance-templates create template-$VPC_NAME-ids-$REGION \
   tee /var/www/html/index.html
   systemctl restart apache2'
 
-echo_cmd gcloud compute instance-groups managed create mig-$VPC_NAME-ids-uswest4 --template=template-$VPC_NAME-ids-$REGION --size=1 --zone=$REGION-a
+echo_cmd gcloud compute instance-groups managed create mig-$VPC_NAME-ids-uswest1 --template=template-$VPC_NAME-ids-$REGION --size=1 --zone=$REGION-a
 
 checkpoint
 } # End of task 4
@@ -222,7 +222,7 @@ Things to be created:
         Region: $REGION
         Protocol: TCP
         Backends:
-            - Name: mig-$VPC_NAME-ids-uswest4
+            - Name: mig-$VPC_NAME-ids-uswest1
               Zone: $RESION-a
               Region: $REGION
 * Forwarding Rule
@@ -231,7 +231,7 @@ Things to be created:
         Backend service: be-$VPC_NAME-suricata-$REGION
         Is mirroring collector: True
         Network: $VPC_NAME
-        Subnet: $VPC_NAME-uswest4-ids
+        Subnet: $VPC_NAME-uswest1-ids
         Region: $REGION
         Protocol: TCP (will be overwritten in the future task)
         Ports: all
@@ -240,14 +240,14 @@ EOF
 pause
 echo_cmd gcloud compute health-checks create tcp hc-tcp-80 --port 80
 echo_cmd gcloud compute backend-services create be-$VPC_NAME-suricata-$REGION --load-balancing-scheme=INTERNAL --health-checks=hc-tcp-80 --network=$VPC_NAME --protocol=TCP --region=$REGION
-echo_cmd gcloud compute backend-services add-backend be-$VPC_NAME-suricata-$REGION --instance-group=mig-$VPC_NAME-ids-uswest4 --instance-group-zone=$REGION-a --region=$REGION
-echo_cmd gcloud compute forwarding-rules create ilb-$VPC_NAME-suricata-ilb-$REGION --load-balancing-scheme=INTERNAL --backend-service=be-$VPC_NAME-suricata-$REGION --is-mirroring-collector --network=$VPC_NAME --region=$REGION --subnet=$VPC_NAME-uswest4-ids --ip-protocol=TCP --ports=all
+echo_cmd gcloud compute backend-services add-backend be-$VPC_NAME-suricata-$REGION --instance-group=mig-$VPC_NAME-ids-uswest1 --instance-group-zone=$REGION-a --region=$REGION
+echo_cmd gcloud compute forwarding-rules create ilb-$VPC_NAME-suricata-ilb-$REGION --load-balancing-scheme=INTERNAL --backend-service=be-$VPC_NAME-suricata-$REGION --is-mirroring-collector --network=$VPC_NAME --region=$REGION --subnet=$VPC_NAME-uswest1-ids --ip-protocol=TCP --ports=all
 
 checkpoint
 } # End of task 5
 
 task6(){
-IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest4 --zone=$REGION-a  --format="csv(NAME)" --limit=1 | tail -n +2)
+IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest1 --zone=$REGION-a  --format="csv(NAME)" --limit=1 | tail -n +2)
 cat << EOF
 Task 6 - Install Suricata IDS and configure packet mirroring policy
 $(splitter)
@@ -319,17 +319,17 @@ echo "Switching back to cloud shell..."
 
 splitter
 echo "Creating Packet Mirroring Policy"
-echo_cmd gcloud compute packet-mirrorings create mirror-$VPC_NAME-web --collector-ilb=ilb-$VPC_NAME-suricata-ilb-$REGION --network=$VPC_NAME --mirrored-subnets=$VPC_NAME-uswest4 --region=$REGION
+echo_cmd gcloud compute packet-mirrorings create mirror-$VPC_NAME-web --collector-ilb=ilb-$VPC_NAME-suricata-ilb-$REGION --network=$VPC_NAME --mirrored-subnets=$VPC_NAME-uswest1 --region=$REGION
 } # End of task 6
 
 task7(){
-IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest4 --zone=$REGION-a --format="csv(NAME)" --limit=1 | tail -n +2)
+IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest1 --zone=$REGION-a --format="csv(NAME)" --limit=1 | tail -n +2)
 cat << EOF
 Task 7 - Test packet mirroring
 $(splitter)
 We'll test if we've configured packet mirroring correctly.
 Here's the list of target instances:
-$(gcloud compute instances list --filter="name:mig-$VPC_NAME-web-uswest4*" --zones=$REGION-a --format='table(NAME, EXTERNAL_IP)')
+$(gcloud compute instances list --filter="name:mig-$VPC_NAME-web-uswest1*" --zones=$REGION-a --format='table(NAME, EXTERNAL_IP)')
 
 Launch another cloud shell to ping, send HTTP request to those IPs.
 
@@ -350,9 +350,9 @@ echo_cmd gcloud compute ssh $IDS_INST_NAME --zone=$REGION-a
 } # End of task 7
 
 task8(){
-WEB_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-web-uswest4 --zone=$REGION-a --format="csv(NAME)" --limit=1 | tail -n +2)
+WEB_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-web-uswest1 --zone=$REGION-a --format="csv(NAME)" --limit=1 | tail -n +2)
 WEB_INST_EXT_IP=$(gcloud compute instances list --filter="name:$WEB_INST_NAME" --zones=$REGION-a --format="csv(EXTERNAL_IP)" | tail -n +2)
-IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest4 --zone=$REGION-a  --format="csv(NAME)" --limit=1 | tail -n +2)
+IDS_INST_NAME=$(gcloud compute instance-groups managed list-instances mig-$VPC_NAME-ids-uswest1 --zone=$REGION-a  --format="csv(NAME)" --limit=1 | tail -n +2)
 cat << EOF
 Task 8 - Test IDS rules
 $(splitter)
